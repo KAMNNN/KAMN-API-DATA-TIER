@@ -1,0 +1,57 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Teachers Pet API
+Globals:
+  Function:
+    Runtime: nodejs8.10
+    Environment:
+      Variables:
+        SESSION_TABLE:
+          Ref: SessionTable
+  Api:
+    Cors:
+      AllowMethods: '''*'''
+      AllowHeaders: '''*'''
+      AllowOrigin: '''*'''
+Resources:
+  CreateSessionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/index.createSession
+      FunctionName: CreateSessionFunction
+      Policies: AmazonDynamoDBFullAccess
+      Events:
+        PostResource:
+          Type: Api
+          Properties:
+            Path: /session/create
+            Method: get
+      CodeUri: s3://460163561631-us-west-2-kamn-serverless-workload/8c3a74b109eb3c485d22687e571b07ef
+  JoinSessionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/index.joinSession
+      FunctionName: JoinSessionFunction
+      Policies: AmazonDynamoDBFullAccess
+      Events:
+        GetResource:
+          Type: Api
+          Properties:
+            Path: /session/join
+            Method: get
+      CodeUri: s3://460163561631-us-west-2-kamn-serverless-workload/8c3a74b109eb3c485d22687e571b07ef
+  SessionTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: Sessions
+      PrimaryKey:
+        Name: session_id
+        Type: String
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+Outputs:
+  ApiUrl:
+    Description: URL of the Prod stage of the API endpoint
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod

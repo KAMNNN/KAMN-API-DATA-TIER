@@ -1,0 +1,72 @@
+# To deploy for the first time, and for each update,
+# run both of the following commands in order:
+#
+# aws cloudformation package \
+# --template-file serverless.cfn.yml \
+# --output-template-file serverless-xfm.cfn.yml \
+# --s3-bucket <your-s3-bucket-name>
+#
+# aws cloudformation deploy \
+# --template-file <path-to-file/serverless-xfm.cfn.yml> \
+# --stack-name StartupKitServerless \
+# --capabilities CAPABILITY_IAM
+
+
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Teachers Pet API
+
+Globals:
+  Function:
+    Runtime: nodejs8.10
+    Environment:
+      Variables:
+        SESSION_TABLE: !Ref SessionTable
+  Api:
+    Cors:
+      AllowMethods: "'*'"
+      AllowHeaders: "'*'"
+      AllowOrigin: "'*'"
+
+Resources:
+  CreateSessionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/index.createSession
+      FunctionName: CreateSessionFunction
+      Policies: AmazonDynamoDBFullAccess
+      Events:
+        PostResource:
+          Type: Api
+          Properties:
+            Path: /session/create
+            Method: get
+
+  JoinSessionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/index.joinSession
+      FunctionName: JoinSessionFunction
+      Policies: AmazonDynamoDBFullAccess
+      Events:
+        GetResource:
+          Type: Api
+          Properties:
+            Path: /session/join
+            Method: get
+
+  SessionTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: Sessions
+      PrimaryKey:
+         Name: session_id
+         Type: String
+      ProvisionedThroughput:
+         ReadCapacityUnits: 5
+         WriteCapacityUnits: 5
+
+Outputs:
+  ApiUrl:
+    Description: URL of the Prod stage of the API endpoint
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod"
