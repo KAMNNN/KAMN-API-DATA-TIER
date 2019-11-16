@@ -3,7 +3,7 @@ Transform: AWS::Serverless-2016-10-31
 Description: Teachers Pet API
 Globals:
   Function:
-    Runtime: nodejs8.10
+    Runtime: nodejs10.x
     Environment:
       Variables:
         SESSION_TABLE:
@@ -19,14 +19,16 @@ Resources:
     Properties:
       Handler: src/index.createSession
       FunctionName: CreateSessionFunction
-      Policies: AmazonDynamoDBFullAccess
+      Policies:
+      - AmazonDynamoDBFullAccess
+      - AmazonSQSFullAccess
       Events:
         PostResource:
           Type: Api
           Properties:
             Path: /session/create
             Method: get
-      CodeUri: s3://460163561631-us-west-2-kamn-serverless-workload/8c3a74b109eb3c485d22687e571b07ef
+      CodeUri: s3://460163561631-us-west-2-kamn-serverless-workload/a0bde414179c4efc66a729cd108c29db
   JoinSessionFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -39,7 +41,22 @@ Resources:
           Properties:
             Path: /session/join
             Method: get
-      CodeUri: s3://460163561631-us-west-2-kamn-serverless-workload/8c3a74b109eb3c485d22687e571b07ef
+      CodeUri: s3://460163561631-us-west-2-kamn-serverless-workload/a0bde414179c4efc66a729cd108c29db
+  GetQuestionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/index.getQuestion
+      FunctionName: GetQuestionFunction
+      Policies:
+      - AmazonDynamoDBFullAccess
+      - AmazonSQSFullAccess
+      Events:
+        GetResource:
+          Type: Api
+          Properties:
+            Path: /questions
+            Method: get
+      CodeUri: s3://460163561631-us-west-2-kamn-serverless-workload/a0bde414179c4efc66a729cd108c29db
   SessionTable:
     Type: AWS::Serverless::SimpleTable
     Properties:

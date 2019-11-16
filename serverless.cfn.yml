@@ -18,7 +18,7 @@ Description: Teachers Pet API
 
 Globals:
   Function:
-    Runtime: nodejs8.10
+    Runtime: nodejs10.x
     Environment:
       Variables:
         SESSION_TABLE: !Ref SessionTable
@@ -34,7 +34,9 @@ Resources:
     Properties:
       Handler: src/index.createSession
       FunctionName: CreateSessionFunction
-      Policies: AmazonDynamoDBFullAccess
+      Policies: 
+       - AmazonDynamoDBFullAccess
+       - AmazonSQSFullAccess
       Events:
         PostResource:
           Type: Api
@@ -53,6 +55,20 @@ Resources:
           Type: Api
           Properties:
             Path: /session/join
+            Method: get
+  GetQuestionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/index.getQuestion
+      FunctionName: GetQuestionFunction
+      Policies: 
+        - AmazonDynamoDBFullAccess
+        - AmazonSQSFullAccess
+      Events:
+        GetResource:
+          Type: Api
+          Properties:
+            Path: /questions
             Method: get
 
   SessionTable:
