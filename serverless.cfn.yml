@@ -22,6 +22,7 @@ Globals:
     Environment:
       Variables:
         SESSION_TABLE: !Ref SessionTable
+        QUESTION_TABLE: !Ref QuestionTable
   Api:
     Cors:
       AllowMethods: "'*'"
@@ -77,6 +78,16 @@ Resources:
       TableName: Sessions
       PrimaryKey:
          Name: session_id
+         Type: String
+      ProvisionedThroughput:
+         ReadCapacityUnits: 5
+         WriteCapacityUnits: 5
+  QuestionTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: Questions
+      PrimaryKey:
+         Name: question_id
          Type: String
       ProvisionedThroughput:
          ReadCapacityUnits: 5

@@ -3,12 +3,13 @@
 const ddbClient = require('./clients/ddbClient');
 const sqsClient = require('./clients/sqsClient');
 const sessionTable = process.env.SESSION_TABLE;
+const questionTable = process.env.QUESTION_TABLE;
 
 // https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
 const createResponseObject = (response) => {
   return {
 		statusCode: (response.error) ? 500 : (response.invalid) ? 400 : 200,
-		body: JSON.stringify(response),//(response.error || response.invalid || response.success).body),
+		body: JSON.stringify((response.error || response.invalid || response.success).body),
 	  headers: {
 			'Access-Control-Allow-Origin': '*', // Alter to restrict origin for CORS purposes
 		}
@@ -29,7 +30,8 @@ exports.createSession = async (event) => {
 	const queueParams = {
 		QueueName: `${session_id}.fifo`,
 		Attributes: {
-			FifoQueue: 'true'
+			FifoQueue: 'true',
+			ContentBasedDeduplication: 'true'
 		}
 	};
 	let response;
@@ -73,13 +75,24 @@ exports.joinSession = async (event) => {
 	return createResponseObject(response);
 };  
 
+// API call to get a question
 exports.getQuestion = async (body) => {
 	console.log('Attempting to get a question from sqs..');
 	const session_id = "4389";
+	const question_id = "223";
 	const ddbParams = {
 		TableName: sessionTable,
 		Key: {
 			session_id: session_id
+		}
+	};
+	let ddbQuestionParams = {
+		TableName: questionTable,
+	  Item: {
+			question_id: question_id,
+			session: session_id,
+			correct_answers: 0,
+			incorrect_answers: 0
 		}
 	};
 	let sqsParams = {
@@ -98,7 +111,13 @@ exports.getQuestion = async (body) => {
 			response = { success : { body : 'No questions in queue' } };
 		} else {
 		  console.log(`Successfully retrieved a message from SQS`);
-		  response = { success : { body : JSON.parse(data.Messages[0].Body) } };
+			console.log(data.Messages[0].Body);
+			const questionData = JSON.parse(JSON.parse(data.Messages[0].Body));
+			questionData['question_id'] = question_id;
+			Object.assign(ddbQuestionParams.Item, questionData);
+			console.log(ddbQuestionParams);
+			const ddbQuestionResponse = await ddbClient.put(ddbQuestionParams);
+			response = { success : { body : JSON.stringify(questionData) } };
 		}
 	} catch (err) {
 		console.log(`Failed to retrieve a message from SQS with ERROR: ${err}`);

@@ -8,6 +8,8 @@ Globals:
       Variables:
         SESSION_TABLE:
           Ref: SessionTable
+        QUESTION_TABLE:
+          Ref: QuestionTable
   Api:
     Cors:
       AllowMethods: '''*'''
@@ -28,7 +30,7 @@ Resources:
           Properties:
             Path: /session/create
             Method: get
-      CodeUri: s3://460163561631-us-west-2-kamn-serverless-workload/a0bde414179c4efc66a729cd108c29db
+      CodeUri: s3://460163561631-us-west-2-kamn-serverless-workload/c0358cc67b59f82eac44e4d1b0c7c1cf
   JoinSessionFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -41,7 +43,7 @@ Resources:
           Properties:
             Path: /session/join
             Method: get
-      CodeUri: s3://460163561631-us-west-2-kamn-serverless-workload/a0bde414179c4efc66a729cd108c29db
+      CodeUri: s3://460163561631-us-west-2-kamn-serverless-workload/c0358cc67b59f82eac44e4d1b0c7c1cf
   GetQuestionFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -56,13 +58,23 @@ Resources:
           Properties:
             Path: /questions
             Method: get
-      CodeUri: s3://460163561631-us-west-2-kamn-serverless-workload/a0bde414179c4efc66a729cd108c29db
+      CodeUri: s3://460163561631-us-west-2-kamn-serverless-workload/c0358cc67b59f82eac44e4d1b0c7c1cf
   SessionTable:
     Type: AWS::Serverless::SimpleTable
     Properties:
       TableName: Sessions
       PrimaryKey:
         Name: session_id
+        Type: String
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+  QuestionTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: Questions
+      PrimaryKey:
+        Name: question_id
         Type: String
       ProvisionedThroughput:
         ReadCapacityUnits: 5
